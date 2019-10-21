@@ -7,10 +7,8 @@
     <title>Mybrary</title>
 </head>
 <body>
-    Before (in layout.ejs file)
-    <br>
+    <%- include("../partials/header.ejs") %>
+    <%- include("../partials/errorMessage.ejs") %>
     <%- body %> <!-- where the body of each page will be placed -->
-    <br>
-    After (in layout.ejs file)
 </body>
 </html>

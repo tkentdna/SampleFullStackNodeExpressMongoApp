@@ -7,15 +7,16 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
-const mongodb = require("mongoose");  // MongoDB integration library
+const mongoose = require("mongoose");  // MongoDB integration library
+const bodyParser = require("body-parser");
 
 // set up connection to the appropriate MongoDB instance
-mongodb.connect(process.env.DATABASE_URL, { 
+mongoose.connect(process.env.DATABASE_URL, { 
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
 // let's log whether we are able to connect to the MongoDB instance
-const db = mongodb.connection;
+const db = mongoose.connection;
 // on an error connecting to the MongoDB...
 db.on("error", error => {
     console.error(`Error connecting to Mongo DB: ${error}`);
@@ -27,6 +28,9 @@ db.once("open", () => {
 
 // get reference to the route for index (root)
 const indexRouter = require("./routes/index");
+
+// get reference to the route for Authors
+const authorRouter = require("./routes/authors");
 
 // get an instance of the express application 
 const app = express();
@@ -42,9 +46,12 @@ app.set("layout", "layouts/layout");
 app.use(expressLayouts);
 // indicate where to find application assets (js, style sheets, images, etc.) -- in a folder labeled 'public'
 app.use(express.static("public"));
+// indicate to use body-parser, and limit the payload to 10MB
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: false }));
 
 // set up routes
 app.use("/", indexRouter);  
+app.use("/authors", authorRouter);  
 
 
 // listen for http requests on a particular port
