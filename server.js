@@ -14,7 +14,7 @@ const bodyParser = require("body-parser");
 mongoose.connect(process.env.DATABASE_URL, { 
     useNewUrlParser: true,
     useUnifiedTopology: true
-});
+}).catch(error => handleError(error));
 // let's log whether we are able to connect to the MongoDB instance
 const db = mongoose.connection;
 // on an error connecting to the MongoDB...
@@ -25,6 +25,10 @@ db.on("error", error => {
 db.once("open", () => {
     console.log("Successfully connected to MongoDB");
 });
+
+function handleError(error) {
+    console.log(error);
+}
 
 // get reference to the route for index (root)
 const indexRouter = require("./routes/index");
