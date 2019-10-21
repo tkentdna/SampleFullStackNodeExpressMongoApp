@@ -10,11 +10,32 @@ const expressLayouts = require("express-ejs-layouts");
 const mongoose = require("mongoose");  // MongoDB integration library
 const bodyParser = require("body-parser");
 
-// set up connection to the appropriate MongoDB instance
-mongoose.connect(process.env.DATABASE_URL, { 
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).catch(error => handleError(error));
+//set up connection to the appropriate MongoDB instance
+// mongoose.connect(process.env.DATABASE_URL, { 
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true
+// });
+
+// mongoose.connect(process.env.DATABASE_URL, { 
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true
+// }).catch(error => handleError(error));
+
+// utilize IIFE to connect to the MongoDB via Mongoose
+(async function connectToMongoose() {
+    try {
+        await mongoose.connect(process.env.DATABASE_URL, { 
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        })
+    } catch (error) {
+        //console.error(`Error upon attempting to connect to MongoDB via Mongoose ${process.env.DATABASE_URL}: ${error}`);
+        handleError(error);
+    }
+})();
+
+
+
 // let's log whether we are able to connect to the MongoDB instance
 const db = mongoose.connection;
 // on an error connecting to the MongoDB...
@@ -27,7 +48,7 @@ db.once("open", () => {
 });
 
 function handleError(error) {
-    console.log(error);
+    console.error(`Error connecting to Mongo DB: ${error}`);
 }
 
 // get reference to the route for index (root)
