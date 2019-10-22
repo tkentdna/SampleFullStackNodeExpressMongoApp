@@ -16,23 +16,23 @@ const bodyParser = require("body-parser");
 //     useUnifiedTopology: true
 // });
 
-// mongoose.connect(process.env.DATABASE_URL, { 
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true
-// }).catch(error => handleError(error));
+mongoose.connect(process.env.DATABASE_URL, { 
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).catch(error => handleError(error));
 
-// utilize IIFE to connect to the MongoDB via Mongoose
-(async function connectToMongoose() {
-    try {
-        await mongoose.connect(process.env.DATABASE_URL, { 
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        })
-    } catch (error) {
-        //console.error(`Error upon attempting to connect to MongoDB via Mongoose ${process.env.DATABASE_URL}: ${error}`);
-        handleError(error);
-    }
-})();
+// // utilize IIFE to connect to the MongoDB via Mongoose
+// (async function connectToMongoose() {
+//     try {
+//         await mongoose.connect(process.env.DATABASE_URL, { 
+//             useNewUrlParser: true,
+//             useUnifiedTopology: true
+//         })
+//     } catch (error) {
+//         //console.error(`Error upon attempting to connect to MongoDB via Mongoose ${process.env.DATABASE_URL}: ${error}`);
+//         handleError(error);
+//     }
+// })();
 
 
 
