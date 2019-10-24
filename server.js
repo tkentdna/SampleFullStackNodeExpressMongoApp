@@ -57,6 +57,9 @@ const indexRouter = require("./routes/index");
 // get reference to the route for Authors
 const authorRouter = require("./routes/authors");
 
+// get reference to the route for Books
+const bookRouter = require("./routes/books");
+
 // get an instance of the express application 
 const app = express();
 
@@ -77,6 +80,7 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: false }));
 // set up routes
 app.use("/", indexRouter);  
 app.use("/authors", authorRouter);  
+app.use("/books", bookRouter);  
 
 
 // listen for http requests on a particular port
