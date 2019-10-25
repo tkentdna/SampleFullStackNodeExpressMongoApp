@@ -1,6 +1,6 @@
 // include npm components
 const express = require("express");
-const multer = require("multer");
+// const multer = require("multer");
 const path = require("path");  // built-in 'path' library
 const fileSystem = require("fs");  // built-in 'file system' library
 
@@ -11,18 +11,18 @@ const Author = require("../models/author");
 // instantiate an Express router
 const router = express.Router();
 
-// specify the path in the local file system for uploading cover image files
-const uploadPath = path.join("public", Book.coverImageBasePath);
+// // specify the path in the local file system for uploading cover image files
+// const uploadPath = path.join("public", Book.coverImageBasePath);
 
 const imageMimeTypes = ["image/jpeg", "image/png", "image/gif"];
 
-// instantiate a file upload object from Multer (for uploading a file with the cover image)
-const upload = multer({
-    dest: uploadPath,
-    fileFilter: (request, file, callback) => {
-        callback(null, imageMimeTypes.includes(file.mimetype));
-    }
-});
+// // instantiate a file upload object from Multer (for uploading a file with the cover image)
+// const upload = multer({
+//     dest: uploadPath,
+//     fileFilter: (request, file, callback) => {
+//         callback(null, imageMimeTypes.includes(file.mimetype));
+//     }
+// });
 
 const app = express();
 
@@ -90,28 +90,32 @@ router.get("/new", (request, response) => {
 });
 
 // (POST) Create Book Route
-router.post("/", upload.single("coverImageFile"), async (request, response) => {
+// router.post("/", upload.single("coverImageFile"), async (request, response) => {
+router.post("/", async (request, response) => {
 
     const logMessage = "New Book Info: \n  title: " + request.body.title +
         "\n  authorId: " + request.body.authorId +
         "\n  publishDate: " + request.body.publishDate +
         "\n  pageCount: " + request.body.pageCount +
-        "\n  coverImageName: " + request.file.filename +
-        "\n  coverImagePathname: " + request.file.path +
+        // "\n  coverImageName: " + request.file.filename +
+        // "\n  coverImagePathname: " + request.file.path +
         "\n  description: " + request.body.description;
     console.log(logMessage);
 
     // when defining the 'upload' variable (above in this source file), we specified
     // in the fileFilter that the name of the file field in the request will be 'file'
-    const filename = request.file != null ? request.file.filename : null;
+    // const filename = request.file != null ? request.file.filename : null;
     const book = new Book({
         title: request.body.title,
         authorId: request.body.authorId,
         publishDate: new Date(request.body.publishDate),
         pageCount: request.body.pageCount,
-        coverImageName: filename,
+        // coverImageName: filename,
         description: request.body.description
     });
+
+    // save the book cover image file
+    saveCover(book, request.body.cover);
 
     try {
         const newBook = await book.save();
@@ -119,21 +123,36 @@ router.post("/", upload.single("coverImageFile"), async (request, response) => {
         response.redirect(`books`);
     } catch (error) {
         console.error(`Error attempting to save book: ${error}`);
-        // if a book cover image file was uploaded (if the filename exists), let's remove it
-        if (book.coverImageName != null) {
-            removeBookCoverFile(book.coverImageName);
-        }
+        // // if a book cover image file was uploaded (if the filename exists), let's remove it
+        // if (book.coverImageName != null) {
+        //     removeBookCoverFile(book.coverImageName);
+        // }
         renderNewPage(response, book, true);
     }
 });
 
-function removeBookCoverFile(filename) {
-    fileSystem.unlink(path.join(uploadPath, filename), error => {
-        if (error) {
-            console.error(`Error attempting to remove book cover file: ${error}`);
+async function saveCover(book, coverEncoded) {
+    if (coverEncoded != null) {
+        const cover = JSON.parse(coverEncoded);
+        if ((cover != null) && imageMimeTypes.includes(cover.type)) {
+            book.coverImage = new Buffer.from(cover.data, 'base64');
+            book.coverImageType = cover.type;
         }
-    });
+        try {
+        
+        } catch (error) {
+            console.error(`Error attempting to save book cover: ${error}`);
+        }
+    }
 }
+
+// function removeBookCoverFile(filename) {
+//     fileSystem.unlink(path.join(uploadPath, filename), error => {
+//         if (error) {
+//             console.error(`Error attempting to remove book cover file: ${error}`);
+//         }
+//     });
+// }
 
 async function renderNewPage(response, book, hasError = false) {
     try {
