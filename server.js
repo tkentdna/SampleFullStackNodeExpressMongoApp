@@ -9,6 +9,7 @@ const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const mongoose = require("mongoose");  // MongoDB integration library
 const bodyParser = require("body-parser");
+const methodOverride = require("method-override");
 
 //set up connection to the appropriate MongoDB instance
 // mongoose.connect(process.env.DATABASE_URL, { 
@@ -72,6 +73,9 @@ app.set("views", __dirname + "/views");
 app.set("layout", "layouts/layout");
 // use Express layouts
 app.use(expressLayouts);
+// use method-override library, and indicate the method paramater name to be used for
+// override POST, translating to a PUT or DELETE
+app.use(methodOverride("_method"));
 // indicate where to find application assets (js, style sheets, images, etc.) -- in a folder labeled 'public'
 app.use(express.static("public"));
 // indicate to use body-parser, and limit the payload to 10MB
