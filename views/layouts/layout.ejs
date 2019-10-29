@@ -13,11 +13,17 @@
     <!-- <script defer src="../../public/javascripts/fileUpload.js"></script> -->
     <script defer src="/javascripts/fileUpload.js"></script>
 
+    <link rel="stylesheet" href="/stylesheets/main.css">
+
     <title>Mybrary</title>
 </head>
 <body>
-    <%- include("../partials/header.ejs") %>
-    <%- include("../partials/errorMessage.ejs") %>
-    <%- body %> <!-- where the body of each page will be placed -->
+    <div class="container">
+        <%- include("../partials/header.ejs") %>
+        <div class="inner-container">
+            <%- include("../partials/errorMessage.ejs") %>
+            <%- body %> <!-- where the body of each page will be placed -->
+        </div>
+    </div>
 </body>
 </html>
