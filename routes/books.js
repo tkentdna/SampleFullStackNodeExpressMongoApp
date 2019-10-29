@@ -65,36 +65,59 @@ router.get("/", async (request, response) => {
     // }
 });
 
+// (GET) To create a new book
 // New Books Route (form for creating an Book)
 router.get("/new", (request, response) => {
-    // try {
-    //     // get all authors from the DB
-    //     const allAuthors = await Author.find({});
-
-    //     // instantiate a new Book object
-    //     const newBook = new Book();
-
-    //     // Render the collection of authors in the DB and the new book object
-    //     // to the recipient form view for entering a new book.  The collection 
-    //     // of authors will be used to populate the Authors dropdown
-    //     response.render('books/new', {
-    //         authors: allAuthors,
-    //         book: newBook
-    //     });
-    // } catch {
-    //     // in the case of an error, redirect user to the main Books page
-    //     response.redirect("/books");
-    // }
-
-    renderNewPage(response, new Book());
+    renderFormPage(response, new Book(), "new", false);
 });
+
+// (GET) Show Book by ID
+router.get("/:id", async (request, response) => {
+    try {
+        console.log("Ready to get book by id (router.get('/:id')...")
+        // const book = await Book.findById(request.params.id).populate("author").exec();
+
+        // // Render the book details to the "Show Book" form view
+        // response.render('books/show', {
+        //     book: book
+        // });
+
+        const book = await Book.findById(request.params.id)
+                           .populate('author')
+                           .exec();
+        response.render('books/show', { book: book });
+    } catch {
+        console.error(`Error encountered attempting to show book for book id: ${request.params.id}\nError: ${error}`);
+        // in the case of an error, redirect user to the main Books page
+        response.redirect("/");
+    }
+});
+
+// (GET) To edit an existent book
+// Edit Books Route (form for editing a Book)
+router.get("/:id/edit", async (request, response) => {
+    try {
+        console.log("Ready to get book by id (router.get('/:id/edit')...")
+        const book = await Book.findById(request.params.id);
+
+        // Render the book details to the "Edit Book" form view
+        //renderEditPage(response, book);
+        renderFormPage(response, book, "edit", false);
+    } catch {
+        console.error(`Error encountered attempting to edit book for book id: ${request.params.id}\nError: ${error}`);
+        // in the case of an error, redirect user to the main Books page
+        response.redirect("/");
+    }
+
+});
+
 
 // (POST) Create Book Route
 // router.post("/", upload.single("coverImageFile"), async (request, response) => {
 router.post("/", async (request, response) => {
 
     const logMessage = "New Book Info: \n  title: " + request.body.title +
-        "\n  authorId: " + request.body.authorId +
+        "\n  author: " + request.body.author +
         "\n  publishDate: " + request.body.publishDate +
         "\n  pageCount: " + request.body.pageCount +
         // "\n  coverImageName: " + request.file.filename +
@@ -107,7 +130,7 @@ router.post("/", async (request, response) => {
     // const filename = request.file != null ? request.file.filename : null;
     const book = new Book({
         title: request.body.title,
-        authorId: request.body.authorId,
+        author: request.body.author,
         publishDate: new Date(request.body.publishDate),
         pageCount: request.body.pageCount,
         // coverImageName: filename,
@@ -127,10 +150,65 @@ router.post("/", async (request, response) => {
         // if (book.coverImageName != null) {
         //     removeBookCoverFile(book.coverImageName);
         // }
-        renderNewPage(response, book, true);
+        //renderNewPage(response, book, true);
+        renderFormPage(response, book, "new", true);
     }
 });
 
+// (PUT) Update Book Route
+router.put("/:id", async (request, response) => {
+    let book = null;
+    try {
+        console.log(`Ready to find book record to be updated. (id: ${request.params.id})`);
+        book = await Book.findById(request.params.id);
+        book.title = request.body.title;
+        book.publishDate = new Date(request.body.publishDate);
+        book.pageCount = request.body.pageCount;
+        book.description = request.body.description;
+        book.author = request.body.author;
+
+        if ((request.body.cover != null) && (request.body.cover !== "")) {
+            // save the book cover image file
+            saveCover(book, request.body.cover);
+        }
+
+        console.error(`Ready to update book record. (book: ${book})`);
+        await book.save();
+        response.redirect(`/books/${book.id}`);
+    } catch {
+        console.error(`Error finding book record to be updated. (id: ${request.params.id})`);
+        if (book == null) {
+            response.redirect("/");
+        } else {
+            console.error(`Error updating book record. (author: ${book})`);
+            renderFormPage(response, book, "edit", true);
+        }   
+    }
+
+});
+
+router.delete("/:id", async (request, response) => {
+    let book = null;
+    try {
+        console.log(`Ready to find book record to be deleted. (id: ${request.params.id})`);
+        book = await Book.findById(request.params.id);
+        console.error(`Ready to delete book record. (book: ${book})`);
+        await book.remove();
+        response.redirect(`/books`);
+    } catch (error) {
+        console.error(`Error finding book record to be deleted. (id: ${request.params.id})\nError: ${error}`);
+        if (book == null) {
+            response.redirect("/");
+        } else {
+            console.error(`Error updating book record. (book: ${book})\nError: ${error}`);
+            response.redirect("/books/show", {
+                book: book,
+                errorMessage: "Could not remove book"
+            });
+        }
+    }
+});
+    
 async function saveCover(book, coverEncoded) {
     if (coverEncoded != null) {
         const cover = JSON.parse(coverEncoded);
@@ -154,7 +232,54 @@ async function saveCover(book, coverEncoded) {
 //     });
 // }
 
-async function renderNewPage(response, book, hasError = false) {
+// async function renderNewPage(response, book, hasError = false) {
+//     try {
+//         // get all authors from the DB
+//         const allAuthors = await Author.find({});
+
+//         const params = {
+//             authors: allAuthors,
+//             book: book
+//         };
+
+//         // Render the collection of authors in the DB and the new book object
+//         // to the recipient form view for entering a new book.  The collection 
+//         // of authors will be used to populate the Authors dropdown
+//         if (hasError) {
+//             params.errorMessage = "Error creating a new book";
+//         }
+//         response.render('books/new', params);
+//     } catch {
+//         // in the case of an error, redirect user to the main Books page
+//         response.redirect("/books");
+//     }
+// }
+
+// async function renderEditPage(response, book, hasError = false) {
+//     try {
+//         // get all authors from the DB
+//         const allAuthors = await Author.find({});
+
+//         const params = {
+//             authors: allAuthors,
+//             book: book
+//         };
+
+//         // Render the collection of authors in the DB and the new book object
+//         // to the recipient form view for entering a new book.  The collection 
+//         // of authors will be used to populate the Authors dropdown
+//         if (hasError) {
+//             params.errorMessage = "Error editing an existing book";
+//         }
+//         response.render('books/edit', params);
+//     } catch {
+//         // in the case of an error, redirect user to the main Books page
+//         response.redirect("/books");
+//     }
+// }
+
+
+async function renderFormPage(response, book, form, hasError = false) {
     try {
         // get all authors from the DB
         const allAuthors = await Author.find({});
@@ -164,13 +289,21 @@ async function renderNewPage(response, book, hasError = false) {
             book: book
         };
 
-        // Render the collection of authors in the DB and the new book object
-        // to the recipient form view for entering a new book.  The collection 
-        // of authors will be used to populate the Authors dropdown
         if (hasError) {
-            params.errorMessage = "Error creating a new book";
+            console.log(`Processing error for operation type of '${form}'`);
+            if (form === 'edit') {
+                params.errorMessage = 'Error Updating Book'
+            } else {
+                params.errorMessage = 'Error Creating Book'
+            }
         }
-        response.render('books/new', params);
+
+        // Render the form for either creating a new book or editing an existing book.
+        // The params contains both collection of authors in the DB and the new/existing
+        // book object. The collection of authors will be used to populate the Authors 
+        // dropdown.
+        console.log(`Ready to render to books/${form} with params: '${params}'`);
+        response.render(`books/${form}`, params);
     } catch {
         // in the case of an error, redirect user to the main Books page
         response.redirect("/books");

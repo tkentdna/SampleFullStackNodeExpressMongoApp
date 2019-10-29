@@ -40,7 +40,7 @@ router.get("/:id", async (request, response) => {
         console.log("Ready to get author by id...")
         const author = await Author.findById(request.params.id);
         console.log("Ready to find books associated with the author...")
-        const books = await Book.find({ authorId: author.id }).limit(6).exec();
+        const books = await Book.find({ author: author.id }).limit(6).exec();
         response.render('authors/show', {
           author: author,
           booksByAuthor: books

@@ -18,7 +18,7 @@ const authorSchema = new mongoose.Schema({
 // if there are any errors or issues.
 authorSchema.pre("remove", function (next) {
     console.log(`Ready to search for books by author id: ${this.id}`)
-    Book.find({ authorId: this.id }, (error, books) => {
+    Book.find({ author: this.id }, (error, books) => {
         // if an error was encountered when attempting to find books that 
         // reference the author id, call the 'next' callback method with the
         // error object, so that the author record won't be removed from the DB.
